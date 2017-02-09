@@ -1,0 +1,8 @@
+[package]
+name = "client-carriots"
+version = "0.1.0"
+authors = ["Samuel de Ancos <sdeancos@gmail.com>"]
+
+[dependencies]
+docopt = "0.6.86"
+hyper = "0.9.14"
