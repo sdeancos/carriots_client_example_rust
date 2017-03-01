@@ -1,6 +1,6 @@
 [package]
 name = "client-carriots"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Samuel de Ancos <sdeancos@gmail.com>"]
 
 [dependencies]
