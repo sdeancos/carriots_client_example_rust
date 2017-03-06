@@ -23,7 +23,7 @@ Usage:
 Options:
   -h --help
   -a --apikey=<apikey>
-  -c --collection<collection>
+  -c --collection=<collection>
   -i --id_developer=<id_developer>
   -d --data_content=<data_content>
   -f --filters=<filters>
