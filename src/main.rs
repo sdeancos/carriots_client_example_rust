@@ -3,6 +3,7 @@ extern crate docopt;
 
 use docopt::Docopt;
 use std::io::Read;
+use std::io::prelude::*;
 use std::fs::File;
 use std::env;
 use std::path::Path;
@@ -16,17 +17,19 @@ header! { (Accept, "Accept") => [String] }
 const USAGE: &'static str = "
 Carriots Client.
 Usage:
+  client-carriots --set_apikey=<apikey>
   client-carriots read [--apikey=<apikey>] --collection=<collection> [--id_developer=<id_developer>] [--filters=<filters>]
   client-carriots write [--apikey=<apikey>] --collection=<collection> --data_content=<data_content> [--id_developer=<id_developer>]
   client-carriots remove [--apikey=<apikey>] --collection=<collection> --id_developer=<id_developer>
   client-carriots (-h | --help)
 Options:
   -h --help
-  -a --apikey=<apikey>
-  -c --collection=<collection>
-  -i --id_developer=<id_developer>
-  -d --data_content=<data_content>
-  -f --filters=<filters>
+  --set_apikey=<apikey>
+  --apikey=<apikey>
+  --collection=<collection>
+  --id_developer=<id_developer>
+  --data_content=<data_content>
+  --filters=<filters>
 ";
 
 const HOST: &'static str = "https://api.carriots.com";
@@ -78,6 +81,20 @@ fn write_put(client: Client, url_with_cli: String, headers: Headers, data_conten
     return create_response(response);
 }
 
+fn write_carriots_apikey_file(apikey: String) {
+    let home = match env::home_dir() {
+        Some(path) => format!("{}/", path.display()),
+        None => format!("{}", ""),
+    };
+
+    let file_path = format!("{}{}", home, ".carriots_apikey");
+    let path = Path::new(&file_path);
+
+    let mut file = File::create(&path).unwrap();
+
+    let _result = file.write_all(apikey.as_bytes());
+}
+
 fn read_carriots_apikey_file() -> String {
     let home = match env::home_dir() {
         Some(path) => format!("{}/", path.display()),
@@ -106,6 +123,11 @@ fn main() {
                       .unwrap_or_else(|e| e.exit());
 
     let client = Client::new();
+
+    if !args.get_str("--set_apikey").is_empty() {
+        write_carriots_apikey_file(args.get_str("--set_apikey").to_owned());
+        return ()
+    }
 
     let mut headers = Headers::new();
     headers.set(ContentType(String::from(CONTENT_TYPE)));
