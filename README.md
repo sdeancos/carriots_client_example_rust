@@ -16,17 +16,17 @@ client-carriots read --collection=devices --id_developer="defaultDevice@FAKE"
 
 client-carriots remove --collection=group --id_developer="MyGroup@Testing.Testing"
 
-client-carriots write --collection=group --data="$(cat data.json)"
+client-carriots write --collection=group --data_content="$(cat data.json)"
 client-carriots write --collection=group --id_developer="MyAwesomeGroup@Testing.Testing" --data="$(cat data.json)"
 ```
 
 
 ## Usage
 
-- Use read for get data.
-- Use write for create or update data:
+- Use 'read' for get data.
+- Use 'write' for create or update data:
     - data_content must be a json string valid.
-- Use remove for delete data.
+- Use 'remove' for delete data.
 
 
 ```shell
@@ -47,9 +47,13 @@ Options:
   --filters=<filters>
 ```
 
-You can define your apikey in $HOME/.carriots_apikey
+You can define your apikey in $HOME/.carriots_apikey (or with client)
 
 ```shell
+$ client-carriots --set_apikey=YOUR_APIKEY
+$ cat $HOME/.carriots_apikey
+YOUR_APIKEY
+or
 $ echo -n YOUR_APIKEY > $HOME/.carriots_apikey
 $ cat $HOME/.carriots_apikey
 YOUR_APIKEY
