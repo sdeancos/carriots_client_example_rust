@@ -17,6 +17,7 @@ header! { (Accept, "Accept") => [String] }
 const USAGE: &'static str = "
 Carriots Client.
 Usage:
+  client-carriots --get_apikey
   client-carriots --set_apikey=<apikey>
   client-carriots read [--apikey=<apikey>] --collection=<collection> [--id_developer=<id_developer>] [--filters=<filters>]
   client-carriots write [--apikey=<apikey>] --collection=<collection> --data_content=<data_content> [--id_developer=<id_developer>]
@@ -24,6 +25,7 @@ Usage:
   client-carriots (-h | --help)
 Options:
   -h --help
+  --get_apikey
   --set_apikey=<apikey>
   --apikey=<apikey>
   --collection=<collection>
@@ -121,11 +123,19 @@ fn main() {
     let args = Docopt::new(USAGE)
                       .and_then(|dopt| dopt.parse())
                       .unwrap_or_else(|e| e.exit());
-
+    //println!("{:?}", args);
+    
     let client = Client::new();
+    let response_buffer;
 
     if !args.get_str("--set_apikey").is_empty() {
         write_carriots_apikey_file(args.get_str("--set_apikey").to_owned());
+        return ()
+    }
+
+    if args.get_bool("--get_apikey") {
+        response_buffer = read_carriots_apikey_file();
+        println!("{}", response_buffer);
         return ()
     }
 
@@ -150,7 +160,6 @@ fn main() {
         url_with_cli = format!("{}?{}", url_with_cli, args.get_str("--filters"));;
     }
 
-    let response_buffer;
     if args.get_bool("read") {
         response_buffer = read(client, url_with_cli, headers);
     } else if args.get_bool("write") {
