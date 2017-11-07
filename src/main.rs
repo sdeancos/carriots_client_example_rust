@@ -1,4 +1,5 @@
 extern crate docopt;
+extern crate reqwest;
 #[macro_use] extern crate hyper;
 
 use docopt::Docopt;
@@ -7,12 +8,10 @@ use std::io::prelude::*;
 use std::fs::File;
 use std::env;
 use std::path::Path;
-use hyper::{Client};
-use hyper::client::Response;
+
+use reqwest::Client;
+use reqwest::Response;
 use hyper::header::Headers;
-header! { (CarriotsApikey, "Carriots.apikey") => [String] }
-header! { (ContentType, "Content-type") => [String] }
-header! { (Accept, "Accept") => [String] }
 
 const USAGE: &'static str = "
 Carriots Client.
@@ -35,7 +34,14 @@ Options:
 ";
 
 const HOST: &'static str = "https://api.carriots.com";
+const USER_AGENT: &'static str = "Rust-Carriots-Client-0.3.0";
 const CONTENT_TYPE: &'static str = "application/json";
+
+header! { (UserAgent, "User-agent") => [String] }
+header! { (CarriotsApikey, "Carriots.apikey") => [String] }
+header! { (ContentType, "Content-type") => [String] }
+header! { (Accept, "Accept") => [String] }
+
 
 fn create_response(mut response: Response) -> String {
     let mut buf = String::new();
@@ -66,7 +72,7 @@ fn remove(client: Client, url_with_cli: String, headers: Headers) -> String {
 }
 
 fn write_post(client: Client, url_with_cli: String, headers: Headers, data_content: String) -> String {
-    let response = match client.post(&url_with_cli).headers(headers).body(&data_content).send() {
+    let response = match client.post(&url_with_cli).headers(headers).body(data_content).send() {
         Ok(response) => response,
         Err(_) => panic!("Client Error"),
     };
@@ -75,7 +81,7 @@ fn write_post(client: Client, url_with_cli: String, headers: Headers, data_conte
 }
 
 fn write_put(client: Client, url_with_cli: String, headers: Headers, data_content: String) -> String {
-    let response = match client.put(&url_with_cli).headers(headers).body(&data_content).send() {
+    let response = match client.put(&url_with_cli).headers(headers).body(data_content).send() {
         Ok(response) => response,
         Err(_) => panic!("Client Error"),
     };
@@ -124,8 +130,9 @@ fn main() {
                       .and_then(|dopt| dopt.parse())
                       .unwrap_or_else(|e| e.exit());
     //println!("{:?}", args);
-    
-    let client = Client::new();
+
+
+    let client_instance = Client::new();
     let response_buffer;
 
     if !args.get_str("--set_apikey").is_empty() {
@@ -140,6 +147,7 @@ fn main() {
     }
 
     let mut headers = Headers::new();
+    headers.set(UserAgent(String::from(USER_AGENT)));
     headers.set(ContentType(String::from(CONTENT_TYPE)));
     headers.set(Accept(String::from(CONTENT_TYPE)));
 
@@ -161,16 +169,16 @@ fn main() {
     }
 
     if args.get_bool("read") {
-        response_buffer = read(client, url_with_cli, headers);
+        response_buffer = read(client_instance, url_with_cli, headers);
     } else if args.get_bool("write") {
         let data_content: String = format!("{}", args.get_str("--data_content"));
         if args.get_str("--id_developer").is_empty()  {
-            response_buffer = write_post(client, url_with_cli, headers, data_content);
+            response_buffer = write_post(client_instance, url_with_cli, headers, data_content);
         } else {
-            response_buffer = write_put(client, url_with_cli, headers, data_content);
+            response_buffer = write_put(client_instance, url_with_cli, headers, data_content);
         }
     } else if args.get_bool("remove") {
-        response_buffer = remove(client, url_with_cli, headers);
+        response_buffer = remove(client_instance, url_with_cli, headers);
     } else {
         response_buffer = format!("{}","command not found");
     }
