@@ -13,8 +13,10 @@ use reqwest::Client;
 use reqwest::Response;
 use hyper::header::Headers;
 
+const NAME: &'static str = "Carriots Client";
+const VER: &'static str = "0.3.0";
 const USAGE: &'static str = "
-Carriots Client.
+
 Usage:
   client-carriots --get_apikey
   client-carriots --set_apikey=<apikey>
@@ -23,7 +25,7 @@ Usage:
   client-carriots remove [--apikey=<apikey>] --collection=<collection> --id_developer=<id_developer>
   client-carriots (-h | --help)
 Options:
-  -h --help
+  --help
   --get_apikey
   --set_apikey=<apikey>
   --apikey=<apikey>
@@ -34,11 +36,11 @@ Options:
 ";
 
 const HOST: &'static str = "https://api.carriots.com";
-const USER_AGENT: &'static str = "Rust-Carriots-Client-0.3.0";
+const USER_AGENT: &'static str = "Carriots-Client-Rust";
 const CONTENT_TYPE: &'static str = "application/json";
 
 header! { (UserAgent, "User-agent") => [String] }
-header! { (CarriotsApikey, "Carriots.apikey") => [String] }
+header! { (CarriotsApikey, "Carriots-apikey") => [String] }
 header! { (ContentType, "Content-type") => [String] }
 header! { (Accept, "Accept") => [String] }
 
@@ -126,7 +128,8 @@ fn read_carriots_apikey_file() -> String {
 }
 
 fn main() {
-    let args = Docopt::new(USAGE)
+    let usage = format!("{} {}{}", NAME, VER, USAGE);
+    let args = Docopt::new(usage)
                       .and_then(|dopt| dopt.parse())
                       .unwrap_or_else(|e| e.exit());
     //println!("{:?}", args);
