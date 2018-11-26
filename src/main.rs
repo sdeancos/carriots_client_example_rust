@@ -11,10 +11,10 @@ use std::path::Path;
 
 use reqwest::Client;
 use reqwest::Response;
-use hyper::header::Headers;
+use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT, CONTENT_TYPE, ACCEPT};
 
 const NAME: &'static str = "Carriots Client";
-const VER: &'static str = "0.3.0";
+const VER: &'static str = "0.4.0";
 const USAGE: &'static str = "
 
 Usage:
@@ -36,14 +36,16 @@ Options:
 ";
 
 const HOST: &'static str = "https://api.carriots.com";
-const USER_AGENT: &'static str = "Carriots-Client-Rust";
-const CONTENT_TYPE: &'static str = "application/json";
+const DEFAULT_USER_AGENT: &'static str = "Carriots-Client-Rust";
+const DEFAULT_CONTENT_TYPE: &'static str = "application/json";
 
-header! { (UserAgent, "User-agent") => [String] }
-header! { (CarriotsApikey, "Carriots-apikey") => [String] }
-header! { (ContentType, "Content-type") => [String] }
-header! { (Accept, "Accept") => [String] }
-
+fn construct_default_headers() -> HeaderMap {
+    let mut headers = HeaderMap::new();
+    headers.insert(USER_AGENT, HeaderValue::from_static(DEFAULT_USER_AGENT));
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static(DEFAULT_CONTENT_TYPE));
+    headers.insert(ACCEPT, HeaderValue::from_static(DEFAULT_CONTENT_TYPE));
+    headers
+}
 
 fn create_response(mut response: Response) -> String {
     let mut buf = String::new();
@@ -55,7 +57,7 @@ fn create_response(mut response: Response) -> String {
     return buf;
 }
 
-fn read(client: Client, url_with_cli: String, headers: Headers) -> String {
+fn read(client: Client, url_with_cli: String, headers: HeaderMap) -> String {
     let response = match client.get(&url_with_cli).headers(headers).send() {
         Ok(response) => response,
         Err(_) => panic!("Client Error"),
@@ -64,7 +66,7 @@ fn read(client: Client, url_with_cli: String, headers: Headers) -> String {
     return create_response(response);
 }
 
-fn remove(client: Client, url_with_cli: String, headers: Headers) -> String {
+fn remove(client: Client, url_with_cli: String, headers: HeaderMap) -> String {
     let response = match client.delete(&url_with_cli).headers(headers).send() {
         Ok(response) => response,
         Err(_) => panic!("Client Error"),
@@ -73,7 +75,7 @@ fn remove(client: Client, url_with_cli: String, headers: Headers) -> String {
     return create_response(response);
 }
 
-fn write_post(client: Client, url_with_cli: String, headers: Headers, data_content: String) -> String {
+fn write_post(client: Client, url_with_cli: String, headers: HeaderMap, data_content: String) -> String {
     let response = match client.post(&url_with_cli).headers(headers).body(data_content).send() {
         Ok(response) => response,
         Err(_) => panic!("Client Error"),
@@ -82,7 +84,7 @@ fn write_post(client: Client, url_with_cli: String, headers: Headers, data_conte
     return create_response(response);
 }
 
-fn write_put(client: Client, url_with_cli: String, headers: Headers, data_content: String) -> String {
+fn write_put(client: Client, url_with_cli: String, headers: HeaderMap, data_content: String) -> String {
     let response = match client.put(&url_with_cli).headers(headers).body(data_content).send() {
         Ok(response) => response,
         Err(_) => panic!("Client Error"),
@@ -149,16 +151,14 @@ fn main() {
         return ()
     }
 
-    let mut headers = Headers::new();
-    headers.set(UserAgent(String::from(USER_AGENT)));
-    headers.set(ContentType(String::from(CONTENT_TYPE)));
-    headers.set(Accept(String::from(CONTENT_TYPE)));
+    let mut headers = construct_default_headers();
 
     let apikey_from_file = read_carriots_apikey_file();
     if args.get_str("--apikey").is_empty() && !apikey_from_file.is_empty() {
-        headers.set(CarriotsApikey(apikey_from_file.to_owned()));
+        headers.insert("Apikey", HeaderValue::from_str(&apikey_from_file).unwrap());
+
     } else {
-        headers.set(CarriotsApikey(args.get_str("--apikey").to_owned()));
+        headers.insert("Apikey", HeaderValue::from_str(args.get_str("--apikey")).unwrap());
     }
 
     let mut url_with_cli: String = format!("{}/{}/", HOST, args.get_str("--collection"));
